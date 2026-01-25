@@ -19,6 +19,10 @@ app.use('/api/workspaces', require('./routes/workspaceRoutes.js'));
 app.use('/api/bookings', require('./routes/bookingRoutes.js'));
 app.use('/api/admin', require('./routes/adminRoutes.js'));
 
+app.get('/ping', (req, res) => {
+    res.status(200).send('pong');
+});
+
 app.get('/api/health', (req, res) => {
     res.json({ success: true, message: 'Server is running', timestamp: new Date() });
 });
