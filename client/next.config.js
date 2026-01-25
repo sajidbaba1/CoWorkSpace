@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // We explicitly disable standalone output for Amplify to avoid EEXIST errors
-    // Amplify handles the build artifacts itself
-    output: undefined,
+    // Enable standalone output for Docker support
+    output: 'standalone',
     // If you needed images from S3 later
     images: {
         remotePatterns: [
