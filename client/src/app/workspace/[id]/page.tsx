@@ -17,7 +17,8 @@ import {
     Wind,
     Phone,
     Loader2,
-    CheckCircle2
+    CheckCircle2,
+    Heart
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -25,6 +26,8 @@ import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
+import { Reviews } from "@/components/Reviews";
+import toast from "react-hot-toast";
 
 export default function WorkspaceDetails() {
     const { id } = useParams();
@@ -34,6 +37,7 @@ export default function WorkspaceDetails() {
     const [workspace, setWorkspace] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isBooking, setIsBooking] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
 
     // Booking states
@@ -41,18 +45,44 @@ export default function WorkspaceDetails() {
     const [duration, setDuration] = useState(1);
 
     useEffect(() => {
-        const fetchWorkspace = async () => {
+        const fetchData = async () => {
             try {
-                const res = await api.get(`/workspaces/${id}`);
-                setWorkspace(res.data);
+                const [wsRes, userRes] = await Promise.all([
+                    api.get(`/workspaces/${id}`),
+                    isAuthenticated ? api.get('/users/wishlist') : Promise.resolve({ data: [] })
+                ]);
+
+                setWorkspace(wsRes.data);
+                if (isAuthenticated && Array.isArray(userRes.data)) {
+                    setIsFavorite(userRes.data.includes(id));
+                }
             } catch (err) {
-                console.error("Failed to fetch workspace", err);
+                console.error("Failed to fetch data", err);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchWorkspace();
-    }, [id]);
+        fetchData();
+    }, [id, isAuthenticated]);
+
+    const toggleFavorite = async () => {
+        if (!isAuthenticated) {
+            router.push('/login');
+            return;
+        }
+        try {
+            if (isFavorite) {
+                await api.delete(`/users/wishlist/${id}`);
+                toast.success("Removed from wishlist");
+            } else {
+                await api.post(`/users/wishlist/${id}`);
+                toast.success("Added to wishlist");
+            }
+            setIsFavorite(!isFavorite);
+        } catch (err) {
+            toast.error("Failed to update wishlist");
+        }
+    };
 
     const handleBooking = async () => {
         if (!isAuthenticated) {
@@ -72,8 +102,8 @@ export default function WorkspaceDetails() {
                 totalPrice: (workspace?.pricePerHour || 0) * duration
             };
 
-            await api.post('/bookings', bookingData);
-            router.push('/dashboard/user');
+            const res = await api.post('/bookings', bookingData);
+            router.push(`/payment/${res.data._id}`);
         } catch (err: any) {
             setErrors([err.response?.data?.message || "Booking failed. Please try again."]);
         } finally {
@@ -130,7 +160,15 @@ export default function WorkspaceDetails() {
                                 <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" /> 4.9 (Recent)
                             </div>
                         </div>
-                        <h1 className="text-4xl font-black mb-4 tracking-tight">{workspace.name}</h1>
+                        <div className="flex justify-between items-start">
+                            <h1 className="text-4xl font-black mb-4 tracking-tight">{workspace.name}</h1>
+                            <button
+                                onClick={toggleFavorite}
+                                className={`p-3 rounded-full border transition-all ${isFavorite ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-500'}`}
+                            >
+                                <Heart className={`h-6 w-6 ${isFavorite ? 'fill-current' : ''}`} />
+                            </button>
+                        </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <MapPin className="h-4 w-4" />
                             <span>{workspace.address || workspace.location}</span>
@@ -174,6 +212,9 @@ export default function WorkspaceDetails() {
                             ))}
                         </ul>
                     </div>
+
+                    <hr className="my-10 border-border" />
+                    <Reviews workspaceId={id as string} />
                 </div>
 
                 {/* Right Side - Booking Card */}

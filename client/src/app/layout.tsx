@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "Book meeting rooms, private offices, and coworking desks instantly. The ultimate platform for flexible workspace management.",
 };
 
+import { Chatbot } from "@/components/Chatbot";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,6 +36,7 @@ export default function RootLayout({
             <main className="min-h-screen pt-20">
               {children}
             </main>
+            <Chatbot />
             <footer className="bg-muted py-12 px-6 border-t border-border">
               <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div className="col-span-1 md:col-span-1">

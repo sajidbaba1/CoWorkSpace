@@ -207,6 +207,16 @@ router.patch('/workspaces/:id/verify', async (req, res) => {
     }
 });
 
+// Delete Workspace (Reject)
+router.delete('/workspaces/:id', async (req, res) => {
+    try {
+        await Workspace.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Workspace deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Booking Management
 router.get('/bookings', async (req, res) => {
     try {

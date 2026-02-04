@@ -118,9 +118,15 @@ export default function AdminDashboard() {
 
     const handleVerifyWorkspace = async (id: string, isVerified: boolean) => {
         try {
-            await api.patch(`/admin/workspaces/${id}/verify`, { isVerified });
+            if (isVerified) {
+                await api.patch(`/admin/workspaces/${id}/verify`, { isVerified });
+                toast.success("Workspace approved!");
+            } else {
+                if (!confirm("Are you sure you want to reject and delete this workspace?")) return;
+                await api.delete(`/admin/workspaces/${id}`);
+                toast.success("Workspace rejected and deleted!");
+            }
             setPendingWorkspaces(prev => prev.filter(w => w._id !== id));
-            toast.success(isVerified ? "Workspace approved!" : "Workspace rejected!");
         } catch (err) {
             toast.error("Process failed");
         }
@@ -210,7 +216,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="flex bg-card border border-border p-1 rounded-2xl overflow-x-auto max-w-full">
-                        {["overview", "users", "bookings", "payouts", "complaints"].map((tab) => (
+                        {["overview", "workspaces", "users", "bookings", "payouts", "complaints"].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -314,6 +320,75 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === "workspaces" && (
+                    <div className="space-y-6">
+                        <h3 className="text-xl font-bold flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-orange-500" /> Pending Approvals ({pendingWorkspaces.length})
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {pendingWorkspaces.length === 0 ? (
+                                <div className="col-span-2 py-20 text-center text-muted-foreground bg-card border border-border rounded-3xl">
+                                    <CheckCircle className="h-10 w-10 mx-auto mb-4 text-green-500" />
+                                    No pending workspaces to review.
+                                </div>
+                            ) : (
+                                pendingWorkspaces.map(workspace => (
+                                    <div key={workspace._id} className="bg-card border border-border p-6 rounded-3xl shadow-sm">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <h4 className="font-bold text-lg">{workspace.name}</h4>
+                                                <p className="text-sm text-muted-foreground">{workspace.location}</p>
+                                            </div>
+                                            <div className="bg-orange-500/10 text-orange-500 px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                                                Pending
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-4 mb-4">
+                                            <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-secondary">
+                                                {/* Image placeholder */}
+                                                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-xs font-bold">
+                                                    No Image
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 space-y-2 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Price</span>
+                                                    <span className="font-bold">${workspace.pricePerHour}/hr</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Owner</span>
+                                                    <span className="font-bold">{workspace.owner?.name || 'Unknown'}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-muted-foreground">Email</span>
+                                                    <span className="font-bold truncate max-w-[150px]">{workspace.owner?.email || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-foreground/80 leading-relaxed mb-6 line-clamp-2">
+                                            {workspace.description}
+                                        </p>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => handleVerifyWorkspace(workspace._id, true)}
+                                                className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-green-500/20"
+                                            >
+                                                Approve Listing
+                                            </button>
+                                            <button
+                                                onClick={() => handleVerifyWorkspace(workspace._id, false)}
+                                                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-red-500/20"
+                                            >
+                                                Reject Listing
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 )}

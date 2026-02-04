@@ -4,8 +4,27 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, MapPin, Calendar, Users, Star, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import api from "@/lib/api";
 
 export default function Home() {
+  const [workspaces, setWorkspaces] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWorkspaces = async () => {
+      try {
+        const res = await api.get("/workspaces");
+        setWorkspaces(res.data);
+      } catch (err) {
+        console.error("Failed to fetch workspaces", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWorkspaces();
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -72,10 +91,26 @@ export default function Home() {
                 <option value="10+">10+ People</option>
               </select>
             </div>
-            <button className="w-full md:w-auto px-8 py-4 bg-primary text-white rounded-full font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/40">
+            <button
+              onClick={() => window.location.href = '/search'}
+              className="w-full md:w-auto px-8 py-4 bg-primary text-white rounded-full font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/40"
+            >
               <Search className="h-5 w-5" />
               Search
             </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="mt-8"
+          >
+            <Link href="/smart-recommend" className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm">
+              <span className="bg-gradient-to-r from-pink-500 to-purple-500 text-transparent bg-clip-text font-bold">✨ New</span>
+              try our AI Workspace Matcher
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </motion.div>
         </div>
       </section>
@@ -93,39 +128,55 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-foreground">
-          {[1, 2, 3].map((i) => (
-            <motion.div
-              key={i}
-              whileHover={{ y: -10 }}
-              className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all"
-            >
-              <div className="relative h-64">
-                <Image
-                  src={`https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?auto=format&fit=crop&q=80&w=800`}
-                  alt="Workspace"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-4 right-4 glass px-3 py-1 rounded-full text-xs font-bold text-primary flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-primary" /> 4.9
+          {loading ? (
+            [1, 2, 3].map((i) => (
+              <div key={i} className="bg-card border border-border rounded-2xl h-96 animate-pulse" />
+            ))
+          ) : workspaces.length > 0 ? (
+            workspaces.slice(0, 3).map((ws: any, i) => (
+              <motion.div
+                key={ws._id || i}
+                whileHover={{ y: -10 }}
+                className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer group"
+                onClick={() => window.location.href = `/workspace/${ws._id}`}
+              >
+                <div className="relative h-64 overflow-hidden">
+                  <Image
+                    src={ws.images?.[0] || `https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?auto=format&fit=crop&q=80&w=800`}
+                    alt={ws.name}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute top-4 right-4 glass px-3 py-1 rounded-full text-xs font-bold text-primary flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-primary" /> {ws.averageRating || '4.9'}
+                  </div>
                 </div>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-bold">Innovation Hub {i}</h3>
-                  <span className="text-primary font-bold">$25/hr</span>
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-bold truncate pr-4">{ws.name}</h3>
+                    <span className="text-primary font-bold whitespace-nowrap">${ws.pricePerHour}<span className="text-xs font-normal text-muted-foreground">/hr</span></span>
+                  </div>
+                  <div className="flex items-center gap-1 text-muted-foreground text-sm mb-4">
+                    <MapPin className="h-3 w-3" /> <span className="truncate">{ws.location || 'Unknown Location'}</span>
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {ws.amenities?.slice(0, 3).map((amenity: string, idx: number) => (
+                      <span key={idx} className="px-2 py-1 bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-wider rounded-md">{amenity}</span>
+                    ))}
+                    {(!ws.amenities || ws.amenities.length === 0) && (
+                      <>
+                        <span className="px-2 py-1 bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-wider rounded-md">WiFi</span>
+                        <span className="px-2 py-1 bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-wider rounded-md">Coffee</span>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 text-muted-foreground text-sm mb-4">
-                  <MapPin className="h-3 w-3" /> Downtown, San Francisco
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-wider rounded-md">WiFi</span>
-                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-wider rounded-md">Meeting Rooms</span>
-                  <span className="px-2 py-1 bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-wider rounded-md">Coffee</span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))) : (
+            <div className="col-span-3 text-center py-20 text-muted-foreground">
+              No popular workspaces found at the moment.
+            </div>
+          )}
         </div>
       </section>
 

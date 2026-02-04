@@ -18,6 +18,10 @@ app.use('/api/auth', require('./routes/authRoutes.js'));
 app.use('/api/workspaces', require('./routes/workspaceRoutes.js'));
 app.use('/api/bookings', require('./routes/bookingRoutes.js'));
 app.use('/api/admin', require('./routes/adminRoutes.js'));
+app.use('/api/reviews', require('./routes/reviewRoutes.js'));
+app.use('/api/payments', require('./routes/paymentRoutes.js'));
+app.use('/api/ai', require('./routes/aiRoutes.js'));
+app.use('/api/users', require('./routes/userRoutes.js'));
 
 app.get('/ping', (req, res) => {
     res.status(200).send('pong');

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Search, MapPin, User, Menu, X, Info, Home as HomeIcon, LayoutDashboard } from "lucide-react";
+import { Search, MapPin, User, Menu, X, Info, Home as HomeIcon, LayoutDashboard, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { usePathname } from "next/navigation";
@@ -24,6 +24,7 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Home", icon: HomeIcon },
     { href: "/search", label: "Find Spaces", icon: Search },
+    { href: "/smart-recommend", label: "AI Match", icon: Sparkles },
     { href: "/about", label: "About", icon: Info },
   ];
 

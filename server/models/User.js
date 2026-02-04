@@ -5,6 +5,7 @@ const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['customer', 'owner', 'admin'], default: 'customer' },
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Workspace' }],
     createdAt: { type: Date, default: Date.now },
 });
 
