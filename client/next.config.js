@@ -17,6 +17,14 @@ const nextConfig = {
                 protocol: 'https',
                 hostname: 'i.pravatar.cc',
             },
+            {
+                protocol: 'https',
+                hostname: 'res.cloudinary.com',
+            },
+            {
+                protocol: 'https',
+                hostname: 'api.qrserver.com',
+            }
         ],
     },
 };

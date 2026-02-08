@@ -8,6 +8,9 @@ interface User {
     name: string;
     email: string;
     role: "customer" | "owner" | "admin";
+    profileImage?: string;
+    aadharCard?: string;
+    kycStatus?: "pending" | "verified" | "rejected" | "not_submitted";
 }
 
 interface AuthContextType {
@@ -15,6 +18,7 @@ interface AuthContextType {
     login: (userData: any, token: string) => void;
     logout: () => void;
     isAuthenticated: boolean;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,8 +52,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         router.push("/login");
     };
 
+    const refreshUser = async () => {
+        try {
+            // Import dynamically or use fetch to avoid circular dep risks if any, 
+            // but standard import is usually fine. Let's use fetch for simplicity/robustness here
+            // since we just need the token.
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/users/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                const updatedUser = await res.json();
+                localStorage.setItem("user", JSON.stringify(updatedUser)); // Update local storage
+                setUser(updatedUser); // Update state
+            }
+        } catch (error) {
+            console.error("Failed to refresh user data", error);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+        <AuthContext.Provider value={{ user, login, logout, refreshUser, isAuthenticated: !!user }}>
             {children}
         </AuthContext.Provider>
     );

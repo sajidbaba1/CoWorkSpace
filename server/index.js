@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 
@@ -12,6 +14,7 @@ app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
 });
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes.js'));
@@ -29,6 +32,19 @@ app.get('/ping', (req, res) => {
 
 app.get('/api/health', (req, res) => {
     res.json({ success: true, message: 'Server is running', timestamp: new Date() });
+});
+
+// Error Handling Middleware (must be after routes)
+app.use((err, req, res, next) => {
+    if (err instanceof multer.MulterError) {
+        // Multer error (e.g., file too large)
+        return res.status(400).json({ message: err.message });
+    } else if (err) {
+        // Other errors
+        console.error(err);
+        return res.status(500).json({ message: err.message });
+    }
+    next();
 });
 
 // MongoDB Connection & Server Start

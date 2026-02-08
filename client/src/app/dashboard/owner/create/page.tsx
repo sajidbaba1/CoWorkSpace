@@ -7,7 +7,7 @@ import {
     Plus,
     Upload,
     MapPin,
-    DollarSign,
+    IndianRupee,
     Users,
     Info,
     CheckCircle2,
@@ -31,6 +31,7 @@ export default function CreateWorkspace() {
         address: "",
         amenities: [] as string[]
     });
+    const [images, setImages] = useState<File[]>([]);
 
     const amenitiesList = [
         "High-speed WiFi", "Artisan Coffee", "24/7 Access", "Power Backup",
@@ -52,12 +53,31 @@ export default function CreateWorkspace() {
         setErrors([]);
 
         try {
-            await api.post('/workspaces', formData);
+            const data = new FormData();
+            Object.entries(formData).forEach(([key, value]) => {
+                if (key === 'amenities') {
+                    formData.amenities.forEach(amenity => data.append('amenities', amenity));
+                } else {
+                    data.append(key, value as string);
+                }
+            });
+
+            images.forEach(image => {
+                data.append('images', image);
+            });
+
+            await api.post('/workspaces', data);
             router.push('/dashboard/owner');
         } catch (err: any) {
             setErrors([err.response?.data?.message || "Failed to create workspace."]);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setImages(Array.from(e.target.files));
         }
     };
 
@@ -110,6 +130,35 @@ export default function CreateWorkspace() {
                         </div>
                     </div>
 
+                    {/* Images */}
+                    <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
+                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                            <Upload className="h-5 w-5 text-primary" /> Workspace Images
+                        </h2>
+                        <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:bg-secondary/20 transition-all">
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                className="hidden"
+                                id="workspace-images"
+                            />
+                            <label htmlFor="workspace-images" className="cursor-pointer flex flex-col items-center gap-2">
+                                <Upload className="h-8 w-8 text-muted-foreground" />
+                                <span className="font-bold text-sm">Click to upload images</span>
+                                <span className="text-xs text-muted-foreground">Max 5 images (JPG, PNG)</span>
+                            </label>
+                            {images.length > 0 && (
+                                <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                                    {images.map((img, i) => (
+                                        <span key={i} className="text-xs bg-secondary px-2 py-1 rounded-lg">{img.name}</span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Location & Pricing */}
                     <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
                         <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
@@ -127,9 +176,9 @@ export default function CreateWorkspace() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold ml-1">Price per Hour ($)</label>
+                                <label className="text-sm font-bold ml-1">Price per Hour (₹)</label>
                                 <div className="relative">
-                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <input
                                         required
                                         type="number"

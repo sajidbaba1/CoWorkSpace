@@ -44,6 +44,7 @@ export default function AdminDashboard() {
     const [analyticsData, setAnalyticsData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("overview");
+    const [userFilter, setUserFilter] = useState("all"); // 'all', 'owner', 'customer'
 
     useEffect(() => {
         fetchInitialData();
@@ -236,9 +237,9 @@ export default function AdminDashboard() {
                         {/* Financial Stats */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {[
-                                { label: "Gross Volume", value: `$${(stats?.grossRevenue || 0).toLocaleString()}`, icon: DollarSign, color: "text-blue-500", bg: "bg-blue-500/10" },
-                                { label: "Net Revenue", value: `$${(stats?.netRevenue || 0).toLocaleString()}`, icon: Wallet, color: "text-green-500", bg: "bg-green-500/10" },
-                                { label: "Pending Payouts", value: `$${(stats?.payoutPending || 0).toLocaleString()}`, icon: Briefcase, color: "text-orange-500", bg: "bg-orange-500/10" },
+                                { label: "Gross Volume", value: `₹${(stats?.grossRevenue || 0).toLocaleString()}`, icon: DollarSign, color: "text-blue-500", bg: "bg-blue-500/10" },
+                                { label: "Net Revenue", value: `₹${(stats?.netRevenue || 0).toLocaleString()}`, icon: Wallet, color: "text-green-500", bg: "bg-green-500/10" },
+                                { label: "Pending Payouts", value: `₹${(stats?.payoutPending || 0).toLocaleString()}`, icon: Briefcase, color: "text-orange-500", bg: "bg-orange-500/10" },
                                 { label: "Total Bookings", value: stats?.totalBookings || 0, icon: TrendingUp, color: "text-purple-500", bg: "bg-purple-500/10" },
                             ].map((stat, i) => (
                                 <motion.div
@@ -283,7 +284,7 @@ export default function AdminDashboard() {
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                             <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                                            <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                                            <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
                                             <Tooltip
                                                 contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                                 itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
@@ -357,7 +358,7 @@ export default function AdminDashboard() {
                                             <div className="flex-1 space-y-2 text-sm">
                                                 <div className="flex justify-between">
                                                     <span className="text-muted-foreground">Price</span>
-                                                    <span className="font-bold">${workspace.pricePerHour}/hr</span>
+                                                    <span className="font-bold">₹{workspace.pricePerHour}/hr</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-muted-foreground">Owner</span>
@@ -395,6 +396,17 @@ export default function AdminDashboard() {
 
                 {activeTab === "users" && (
                     <div className="bg-card border border-border rounded-3xl overflow-hidden">
+                        <div className="p-4 border-b border-border flex justify-end">
+                            <select
+                                value={userFilter}
+                                onChange={(e) => setUserFilter(e.target.value)}
+                                className="bg-secondary text-sm font-bold px-4 py-2 rounded-xl outline-none border border-border"
+                            >
+                                <option value="all">All Users</option>
+                                <option value="owner">Owners</option>
+                                <option value="customer">Customers</option>
+                            </select>
+                        </div>
                         <table className="w-full text-left">
                             <thead className="bg-secondary/50 border-b border-border">
                                 <tr>
@@ -406,44 +418,47 @@ export default function AdminDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
-                                {Array.isArray(users) && users.filter(u => !!u).map((user, i) => (
-                                    <tr key={user?._id || `user-${i}`} className="hover:bg-secondary/20 transition-all">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
-                                                    {(() => {
-                                                        const name = user?.name;
-                                                        const email = user?.email;
-                                                        if (typeof name === 'string' && name.length > 0) return name[0].toUpperCase();
-                                                        if (typeof email === 'string' && email.length > 0) return email[0].toUpperCase();
-                                                        return 'U';
-                                                    })()}
+                                {Array.isArray(users) && users
+                                    .filter(u => !!u)
+                                    .filter(u => userFilter === 'all' || u.role === userFilter)
+                                    .map((user, i) => (
+                                        <tr key={user?._id || `user-${i}`} className="hover:bg-secondary/20 transition-all">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
+                                                        {(() => {
+                                                            const name = user?.name;
+                                                            const email = user?.email;
+                                                            if (typeof name === 'string' && name.length > 0) return name[0].toUpperCase();
+                                                            if (typeof email === 'string' && email.length > 0) return email[0].toUpperCase();
+                                                            return 'U';
+                                                        })()}
+                                                    </div>
+                                                    <span className="font-bold text-sm">{user?.name || 'Anonymous'}</span>
                                                 </div>
-                                                <span className="font-bold text-sm">{user?.name || 'Anonymous'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-muted-foreground">{user.email || 'No email'}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md ${user.role === 'admin' ? 'bg-red-500/10 text-red-500' :
-                                                user.role === 'owner' ? 'bg-purple-500/10 text-purple-500' :
-                                                    'bg-blue-500/10 text-blue-500'
-                                                }`}>
-                                                {user.role || 'customer'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-muted-foreground">
-                                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <button
-                                                onClick={() => handleDeleteUser(user._id)}
-                                                className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">{user.email || 'No email'}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md ${user.role === 'admin' ? 'bg-red-500/10 text-red-500' :
+                                                    user.role === 'owner' ? 'bg-purple-500/10 text-purple-500' :
+                                                        'bg-blue-500/10 text-blue-500'
+                                                    }`}>
+                                                    {user.role || 'customer'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    onClick={() => handleDeleteUser(user._id)}
+                                                    className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
                             </tbody>
                         </table>
                     </div>
@@ -486,8 +501,8 @@ export default function AdminDashboard() {
                                                 {booking.date ? new Date(booking.date).toLocaleDateString() : 'No date'} at {booking.startTime || '??'}
                                             </td>
                                             <td className="px-6 py-4 text-sm font-black text-right">
-                                                <div className="text-foreground">${booking.totalPrice || 0}</div>
-                                                <div className="text-[10px] text-muted-foreground">Com: ${(booking.platformFee || 0).toFixed(2)}</div>
+                                                <div className="text-foreground">₹{booking.totalPrice || 0}</div>
+                                                <div className="text-[10px] text-muted-foreground">Com: ₹{(booking.platformFee || 0).toFixed(2)}</div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md ${booking.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 'bg-orange-500/10 text-orange-500'
@@ -543,7 +558,7 @@ export default function AdminDashboard() {
                                         <div className="py-4 border-y border-border">
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-sm text-muted-foreground">Total Payable</span>
-                                                <span className="text-2xl font-black">${payout.totalAmount.toFixed(2)}</span>
+                                                <span className="text-2xl font-black">₹{payout.totalAmount.toFixed(2)}</span>
                                             </div>
                                             <div className="flex justify-between items-center">
                                                 <span className="text-xs text-muted-foreground">Platform Fees Deducted</span>

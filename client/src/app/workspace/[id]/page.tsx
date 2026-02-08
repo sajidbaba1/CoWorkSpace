@@ -54,7 +54,7 @@ export default function WorkspaceDetails() {
 
                 setWorkspace(wsRes.data);
                 if (isAuthenticated && Array.isArray(userRes.data)) {
-                    setIsFavorite(userRes.data.includes(id));
+                    setIsFavorite(userRes.data.some((fav: any) => fav._id === id));
                 }
             } catch (err) {
                 console.error("Failed to fetch data", err);
@@ -222,7 +222,7 @@ export default function WorkspaceDetails() {
                     <div className="glass border border-white/40 p-8 rounded-[2.5rem] sticky top-28 shadow-2xl">
                         <div className="flex justify-between items-end mb-8">
                             <div>
-                                <span className="text-3xl font-black">${workspace.pricePerHour}</span>
+                                <span className="text-3xl font-black">₹{workspace.pricePerHour}</span>
                                 <span className="text-muted-foreground ml-1">/ hour</span>
                             </div>
                             <div className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full uppercase">Instant Booking</div>
@@ -254,17 +254,17 @@ export default function WorkspaceDetails() {
 
                         <div className="space-y-4 mb-8">
                             <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">${workspace.pricePerHour} x {duration} hours</span>
-                                <span className="font-bold">${basePrice * duration}.00</span>
+                                <span className="text-muted-foreground">₹{workspace.pricePerHour} x {duration} hours</span>
+                                <span className="font-bold">₹{basePrice * duration}.00</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">Service & Platform fees</span>
-                                <span className="font-bold">$30.00</span>
+                                <span className="font-bold">₹30.00</span>
                             </div>
                             <hr className="border-border" />
                             <div className="flex justify-between items-center">
                                 <span className="font-bold">Total</span>
-                                <span className="text-2xl font-black">${totalPrice}.00</span>
+                                <span className="text-2xl font-black">₹{totalPrice}.00</span>
                             </div>
                         </div>
 

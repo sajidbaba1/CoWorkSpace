@@ -26,8 +26,9 @@ export function Reviews({ workspaceId }: { workspaceId: string }) {
     const [submitting, setSubmitting] = useState(false);
 
     const fetchReviews = async () => {
+        if (!workspaceId) return;
         try {
-            const res = await api.get(`/reviews/${workspaceId}`);
+            const res = await api.get(`/reviews/workspace/${workspaceId}`);
             setReviews(res.data);
         } catch (err) {
             console.error("Failed to fetch reviews");

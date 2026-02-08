@@ -84,7 +84,7 @@ export default function Home() {
             </div>
             <div className="flex-1 flex items-center gap-3 px-6 py-3 w-full">
               <Users className="text-primary h-5 w-5" />
-              <select className="bg-transparent border-none outline-none text-foreground w-full focus:ring-0">
+              <select className="bg-transparent border-none outline-none text-foreground w-full focus:ring-0 [&>option]:bg-white [&>option]:dark:bg-gray-800 [&>option]:text-gray-900 [&>option]:dark:text-white">
                 <option value="1">1 Person</option>
                 <option value="2-4">2-4 People</option>
                 <option value="5-10">5-10 People</option>
@@ -154,7 +154,7 @@ export default function Home() {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-bold truncate pr-4">{ws.name}</h3>
-                    <span className="text-primary font-bold whitespace-nowrap">${ws.pricePerHour}<span className="text-xs font-normal text-muted-foreground">/hr</span></span>
+                    <span className="text-primary font-bold whitespace-nowrap">₹{ws.pricePerHour}<span className="text-xs font-normal text-muted-foreground">/hr</span></span>
                   </div>
                   <div className="flex items-center gap-1 text-muted-foreground text-sm mb-4">
                     <MapPin className="h-3 w-3" /> <span className="truncate">{ws.location || 'Unknown Location'}</span>

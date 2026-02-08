@@ -26,6 +26,7 @@ export default function Navbar() {
     { href: "/search", label: "Find Spaces", icon: Search },
     { href: "/smart-recommend", label: "AI Match", icon: Sparkles },
     { href: "/about", label: "About", icon: Info },
+    { href: "/contact", label: "Contact", icon: Info },
   ];
 
   // Role-based dashboard link

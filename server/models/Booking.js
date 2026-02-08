@@ -29,9 +29,11 @@ const bookingSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'confirmed', 'cancelled', 'completed'],
-        default: 'pending'
+        enum: ['pending_approval', 'approved_for_payment', 'confirmed', 'cancelled', 'completed', 'rejected'],
+        default: 'pending_approval'
     },
+    kycUrl: { type: String, default: null }, // URL specific to booking if needed
+    rejectionReason: { type: String, default: null },
     paymentStatus: {
         type: String,
         enum: ['unpaid', 'paid', 'refunded'],

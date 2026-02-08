@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'api.mapbox.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.qrserver.com',
       }
     ],
   },

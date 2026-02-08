@@ -7,7 +7,7 @@ import {
     Home,
     Settings,
     Bell,
-    DollarSign,
+    IndianRupee,
     Users,
     Clock,
     ChevronRight,
@@ -25,7 +25,7 @@ import Image from "next/image";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function OwnerDashboard() {
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const [myListings, setMyListings] = useState<any[]>([]);
     const [incomingBookings, setIncomingBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -68,15 +68,37 @@ export default function OwnerDashboard() {
         }
     };
 
+    const handleDeleteWorkspace = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this workspace?")) return;
+        try {
+            await api.delete(`/workspaces/${id}`);
+            setMyListings(prev => prev.filter(w => w._id !== id));
+        } catch (err: any) {
+            console.error(err);
+            alert(err.response?.data?.message || "Failed to delete workspace");
+        }
+    };
+
     return (
         <div className="min-h-screen bg-secondary/30">
             {/* ... (keep existing sidebar and header layout) ... */}
             <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row gap-8">
                 {/* Sidebar */}
+
                 <div className="w-full md:w-64 space-y-2">
                     <div className="bg-card border border-border rounded-2xl p-6 mb-6 text-center">
                         <div className="relative w-24 h-24 mx-auto mb-4">
-                            <Image src={`https://i.pravatar.cc/150?u=${user?.email}`} alt="avatar" fill className="rounded-full object-cover border-4 border-primary/10" />
+                            <Image
+                                src={user?.profileImage
+                                    ? (user.profileImage.startsWith('http')
+                                        ? user.profileImage
+                                        : `http://localhost:5000${user.profileImage}`)
+                                    : `https://i.pravatar.cc/150?u=${user?.email}`
+                                }
+                                alt="avatar"
+                                fill
+                                className="rounded-full object-cover border-4 border-primary/10"
+                            />
                             <div className="absolute bottom-1 right-1 w-5 h-5 bg-primary border-2 border-white rounded-full" />
                         </div>
                         <h2 className="font-bold text-lg">{user?.name}</h2>
@@ -87,7 +109,7 @@ export default function OwnerDashboard() {
                         { icon: LayoutDashboard, label: "Dashboard", id: "dashboard" },
                         { icon: Edit3, label: "Insights", id: "insights" }, // New Smart Feature
                         { icon: Home, label: "My Listings", id: "listings" },
-                        { icon: DollarSign, label: "Earnings", id: "earnings" },
+                        { icon: IndianRupee, label: "Earnings", id: "earnings" },
                         { icon: Users, label: "Bookings", id: "bookings" },
                         { icon: Settings, label: "Settings", id: "settings" },
                     ].map((item, i) => (
@@ -120,7 +142,7 @@ export default function OwnerDashboard() {
                             {/* Stats Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {[
-                                    { label: "Total Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-green-500" },
+                                    { label: "Total Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: IndianRupee, color: "text-green-500" },
                                     { label: "Total Bookings", value: incomingBookings.length.toString(), icon: Users, color: "text-primary" },
                                     { label: "Active Listings", value: myListings.length.toString(), icon: Home, color: "text-accent" },
                                 ].map((stat, i) => (
@@ -175,24 +197,27 @@ export default function OwnerDashboard() {
                                                             {booking.status}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 font-bold">${booking.totalPrice}</td>
+                                                    <td className="px-6 py-4 font-bold">₹{booking.totalPrice}</td>
                                                     <td className="px-6 py-4 text-right">
-                                                        {booking.status === 'pending' && (
+                                                        {booking.status === 'pending_approval' && (
                                                             <div className="flex justify-end gap-2">
                                                                 <button
-                                                                    onClick={() => handleUpdateStatus(booking._id, 'confirmed')}
+                                                                    onClick={() => handleUpdateStatus(booking._id, 'approved_for_payment')}
                                                                     className="text-[10px] bg-green-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-green-600 transition-colors"
                                                                 >
-                                                                    Accept
+                                                                    Approve
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleUpdateStatus(booking._id, 'rejected')}
                                                                     className="text-[10px] bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600 transition-colors"
                                                                 >
-                                                                    Decline
+                                                                    Reject
                                                                 </button>
                                                             </div>
                                                         )}
+                                                        {booking.status === 'approved_for_payment' && <span className="text-[10px] text-blue-500 font-bold">Waiting Payment</span>}
+                                                        {booking.status === 'confirmed' && <span className="text-[10px] text-green-600 font-bold">Confirmed</span>}
+                                                        {booking.status === 'rejected' && <span className="text-[10px] text-red-600 font-bold">Rejected</span>}
                                                         {booking.status === 'confirmed' && <span className="text-[10px] text-green-600 font-bold">Accepted</span>}
                                                     </td>
                                                 </tr>
@@ -222,14 +247,18 @@ export default function OwnerDashboard() {
                                             </div>
                                         </div>
                                         <div className="flex flex-col items-center md:items-end px-6">
-                                            <div className="text-lg font-black text-primary">${listing.pricePerHour}/hr</div>
+                                            <div className="text-lg font-black text-primary">₹{listing.pricePerHour}/hr</div>
                                             <div className="text-[10px] text-muted-foreground font-bold uppercase">Base Price</div>
                                         </div>
                                         <div className="flex gap-2 p-2">
                                             <button className="p-3 bg-secondary hover:bg-primary/10 hover:text-primary rounded-xl transition-all" title="Edit">
                                                 <Edit3 className="h-4 w-4" />
                                             </button>
-                                            <button className="p-3 bg-secondary hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all" title="Delete">
+                                            <button
+                                                onClick={() => handleDeleteWorkspace(listing._id)}
+                                                className="p-3 bg-secondary hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all"
+                                                title="Delete"
+                                            >
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
                                         </div>
@@ -251,7 +280,7 @@ export default function OwnerDashboard() {
                                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
                                     <h3 className="text-xl font-bold flex items-center gap-2 mb-4">
-                                        <DollarSign className="h-5 w-5" /> Smart Pricing Suggestion
+                                        <IndianRupee className="h-5 w-5" /> Smart Pricing Suggestion
                                     </h3>
                                     <p className="text-white/80 mb-6 text-sm">
                                         Demand for workspaces in <b>{myListings[0]?.location || 'your area'}</b> is trending up for next week!
@@ -261,7 +290,7 @@ export default function OwnerDashboard() {
                                             <span className="text-xs font-bold uppercase tracking-wider opacity-70">Suggested Rate</span>
                                             <span className="text-sm font-bold bg-green-500 px-2 py-0.5 rounded text-white">+15%</span>
                                         </div>
-                                        <div className="text-3xl font-black">${((myListings[0]?.pricePerHour || 10) * 1.15).toFixed(0)} <span className="text-sm font-normal opacity-70">/ hr</span></div>
+                                        <div className="text-3xl font-black">₹{((myListings[0]?.pricePerHour || 10) * 1.15).toFixed(0)} <span className="text-sm font-normal opacity-70">/ hr</span></div>
                                     </div>
                                     <button className="w-full py-3 bg-white text-primary font-bold rounded-xl hover:bg-white/90 transition-all">
                                         Apply Smart Pricing
@@ -307,15 +336,16 @@ export default function OwnerDashboard() {
                             <div className="h-[400px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart
-                                        data={[
-                                            { name: 'Mon', uv: 4000 },
-                                            { name: 'Tue', uv: 3000 },
-                                            { name: 'Wed', uv: 2000 },
-                                            { name: 'Thu', uv: 2780 },
-                                            { name: 'Fri', uv: 1890 },
-                                            { name: 'Sat', uv: 2390 },
-                                            { name: 'Sun', uv: 3490 },
-                                        ]}
+                                        data={incomingBookings.reduce((acc: any[], booking) => {
+                                            const date = new Date(booking.date).toLocaleDateString();
+                                            const existing = acc.find(item => item.name === date);
+                                            if (existing) {
+                                                existing.uv += booking.totalPrice;
+                                            } else {
+                                                acc.push({ name: date, uv: booking.totalPrice });
+                                            }
+                                            return acc;
+                                        }, []).sort((a: any, b: any) => new Date(a.name).getTime() - new Date(b.name).getTime())}
                                     >
                                         <defs>
                                             <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
@@ -361,7 +391,7 @@ export default function OwnerDashboard() {
                                                         {booking.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 font-bold text-primary">${booking.totalPrice}</td>
+                                                <td className="px-6 py-4 font-bold text-primary">₹{booking.totalPrice}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -371,18 +401,80 @@ export default function OwnerDashboard() {
                     )}
 
                     {activeTab === "settings" && (
-                        <div className="bg-card border border-border p-8 rounded-[2rem] shadow-sm max-w-2xl">
-                            <h3 className="text-xl font-bold mb-6">Account Settings</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-bold mb-2">Full Name</label>
-                                    <input type="text" className="w-full bg-secondary p-4 rounded-xl outline-none" defaultValue={user?.name} />
+                        <div className="max-w-2xl space-y-6">
+                            <h3 className="text-2xl font-bold">Account Settings</h3>
+
+                            {/* Profile Picture */}
+                            <div className="bg-card border border-border p-6 rounded-3xl">
+                                <h3 className="font-bold mb-4">Profile Image</h3>
+                                <div className="flex items-center gap-6">
+                                    <div className="relative w-20 h-20">
+                                        <Image src={user?.profileImage ? (user.profileImage.startsWith('http') ? user.profileImage : `http://localhost:5000${user.profileImage}`) : `https://i.pravatar.cc/150?u=${user?.email}`} alt="Profile" fill className="rounded-full object-cover" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="block mb-2 text-sm text-muted-foreground">Upload new picture</label>
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (!file) return;
+                                                const formData = new FormData();
+                                                formData.append('profileImage', file);
+                                                try {
+                                                    const res = await api.post('/users/upload-profile', formData);
+                                                    if (res.data.success) {
+                                                        // toast.success('Profile image updated');
+                                                        await refreshUser(); // Update context immediately
+                                                    }
+                                                } catch (err: any) {
+                                                    console.error('Failed to upload image:', err.response?.data || err.message);
+                                                    alert(`Failed to upload image: ${err.response?.data?.message || err.message}`);
+                                                }
+                                            }}
+                                            className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold mb-2">Email Address</label>
-                                    <input type="email" className="w-full bg-secondary p-4 rounded-xl outline-none opacity-50" defaultValue={user?.email} disabled />
-                                </div>
-                                <button className="bg-primary text-white py-3 px-8 rounded-xl font-bold shadow-lg hover:shadow-primary/20 hover:scale-[1.02] transition-all">Save Changes</button>
+                            </div>
+
+                            {/* Change Password */}
+                            <div className="bg-card border border-border p-6 rounded-3xl">
+                                <h3 className="font-bold mb-4">Change Password</h3>
+                                <form onSubmit={async (e: any) => {
+                                    e.preventDefault();
+                                    const currentPassword = e.target.currentPassword.value;
+                                    const newPassword = e.target.newPassword.value;
+                                    const confirmPassword = e.target.confirmPassword.value;
+
+                                    if (newPassword !== confirmPassword) {
+                                        return alert("New passwords do not match");
+                                    }
+
+                                    try {
+                                        const res = await api.put('/users/change-password', { currentPassword, newPassword });
+                                        if (res.data.success) {
+                                            alert("Password changed successfully");
+                                            e.target.reset();
+                                        }
+                                    } catch (err: any) {
+                                        alert(err.response?.data?.message || "Failed to change password");
+                                    }
+                                }} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-bold mb-1">Current Password</label>
+                                        <input name="currentPassword" type="password" required className="w-full bg-secondary border border-border rounded-xl px-4 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold mb-1">New Password</label>
+                                        <input name="newPassword" type="password" required className="w-full bg-secondary border border-border rounded-xl px-4 py-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold mb-1">Confirm New Password</label>
+                                        <input name="confirmPassword" type="password" required className="w-full bg-secondary border border-border rounded-xl px-4 py-2" />
+                                    </div>
+                                    <button type="submit" className="bg-primary text-primary-foreground px-6 py-2 rounded-xl font-bold text-sm">Update Password</button>
+                                </form>
                             </div>
                         </div>
                     )}

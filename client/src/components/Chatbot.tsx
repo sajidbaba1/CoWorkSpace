@@ -29,7 +29,7 @@ export function Chatbot() {
             const lower = userMessage.toLowerCase();
 
             if (lower.includes("price") || lower.includes("cost")) {
-                botResponse = "Prices vary by workspace, but hot desks usually start around $10/day and private offices at $50/day.";
+                botResponse = "Prices vary by workspace, but hot desks usually start around ₹10/day and private offices at ₹50/day.";
             } else if (lower.includes("booking") || lower.includes("book")) {
                 botResponse = "You can book a workspace by selecting a location, choosing a date, and clicking 'Reserve Space'.";
             } else if (lower.includes("cancel") || lower.includes("refund")) {

@@ -1,9 +1,11 @@
 const https = require('https');
+require('dotenv').config({ path: './server/.env' });
 
-const API_KEY = 'rnd_qYZeRYAlJp1v3NiZMrGPjFnbHwfF';
+// Load from environment variables
+const API_KEY = process.env.RENDER_API_KEY;
 const REPO_URL = 'https://github.com/sajidbaba1/CoWorkSpace';
-const MONGODB_URI = 'mongodb+srv://pathanadnan154_db_user:1234@cluster0.ljwb9rf.mongodb.net/?appName=Cluster0';
-const JWT_SECRET = 'supersecretkey123';
+const MONGODB_URI = process.env.MONGODB_URI;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function request(method, path, body = null) {
     return new Promise((resolve, reject) => {

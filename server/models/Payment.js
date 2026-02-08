@@ -17,11 +17,11 @@ const PaymentSchema = new mongoose.Schema({
     },
     currency: {
         type: String,
-        default: 'USD'
+        default: 'INR'
     },
     paymentMethod: {
         type: String,
-        enum: ['card', 'upi', 'wallet', 'netbanking'],
+        enum: ['card', 'upi', 'wallet', 'netbanking', 'razorpay'],
         required: true
     },
     status: {

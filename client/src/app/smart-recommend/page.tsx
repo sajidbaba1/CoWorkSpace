@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, DollarSign, Sparkles, Check, ArrowRight, Star } from 'lucide-react';
+import { Search, MapPin, Sparkles, Check, ArrowRight, Star } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SmartRecommend() {
@@ -109,20 +109,20 @@ export default function SmartRecommend() {
                         </h2>
                         <div className="mb-8">
                             <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xl">
-                                $ {preferences.budget} <span className="text-muted-foreground text-sm font-normal">/ day</span>
+                                ₹ {preferences.budget} <span className="text-muted-foreground text-sm font-normal">/ day</span>
                             </div>
                             <input
                                 type="range"
-                                min="10"
-                                max="500"
-                                step="10"
-                                value={preferences.budget || 50}
+                                min="100"
+                                max="5000"
+                                step="100"
+                                value={preferences.budget || 500}
                                 onChange={(e) => setPreferences({ ...preferences, budget: parseInt(e.target.value) })}
                                 className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
                             />
                             <div className="flex justify-between text-sm text-muted-foreground mt-2">
-                                <span>$10</span>
-                                <span>$500+</span>
+                                <span>₹100</span>
+                                <span>₹5000+</span>
                             </div>
                         </div>
 
@@ -136,8 +136,8 @@ export default function SmartRecommend() {
                                     key={req}
                                     onClick={() => setPreferences({ ...preferences, requirement: req })}
                                     className={`p-4 rounded-xl border-2 transition-all font-bold ${preferences.requirement === req
-                                            ? 'border-primary bg-primary/10 text-primary'
-                                            : 'border-border hover:border-primary/50 text-muted-foreground'
+                                        ? 'border-primary bg-primary/10 text-primary'
+                                        : 'border-border hover:border-primary/50 text-muted-foreground'
                                         }`}
                                 >
                                     {req}
@@ -173,8 +173,8 @@ export default function SmartRecommend() {
                                     key={fac}
                                     onClick={() => toggleFacility(fac)}
                                     className={`p-4 rounded-xl border-2 transition-all font-bold text-left flex items-center justify-between ${preferences.facilities.includes(fac)
-                                            ? 'border-primary bg-primary/10 text-primary'
-                                            : 'border-border hover:border-primary/50 text-muted-foreground'
+                                        ? 'border-primary bg-primary/10 text-primary'
+                                        : 'border-border hover:border-primary/50 text-muted-foreground'
                                         }`}
                                 >
                                     {fac}
@@ -230,17 +230,21 @@ export default function SmartRecommend() {
                                                     <Star className="w-4 h-4 fill-primary" /> {ws.aiScore ? (ws.aiScore / 10).toFixed(1) : 'New'} AI Score
                                                 </div>
                                             </div>
-                                            <p className="text-muted-foreground mb-4">{ws.address}, {ws.city}</p>
+                                            <p className="text-muted-foreground mb-4">{ws.location}</p>
                                             <div className="flex gap-2 flex-wrap mb-4">
-                                                {ws.facilities.map((f: string) => (
+                                                {ws.amenities?.slice(0, 3).map((f: string) => (
                                                     <span key={f} className="text-xs font-bold uppercase tracking-wider bg-secondary px-2 py-1 rounded text-secondary-foreground">{f}</span>
                                                 ))}
+                                                {ws.amenities?.length > 3 && <span className="text-xs text-muted-foreground">+{ws.amenities.length - 3} more</span>}
                                             </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-xl font-bold">${ws.price} <span className="text-sm font-normal text-muted-foreground">/ day</span></span>
-                                                <Link href={`/workspace/${ws._id}`} className="bg-primary text-primary-foreground px-6 py-2 rounded-full font-bold hover:bg-primary/90">
+                                            <div className="flex justify-between items-center mt-auto">
+                                                <div>
+                                                    <span className="text-xl font-bold">₹{ws.pricePerHour} <span className="text-sm font-normal text-muted-foreground">/ hr</span></span>
+                                                    <div className="text-xs text-muted-foreground">Approx ₹{ws.pricePerHour * 8}/day</div>
+                                                </div>
+                                                <button onClick={() => window.location.href = `/workspace/${ws._id}`} className="bg-primary text-primary-foreground px-6 py-2 rounded-full font-bold hover:bg-primary/90">
                                                     View Details
-                                                </Link>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

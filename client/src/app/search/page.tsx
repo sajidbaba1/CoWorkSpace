@@ -118,7 +118,7 @@ export default function SearchPage() {
                                         <div className="flex justify-between items-start mb-2">
                                             <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{space.name}</h3>
                                             <div className="text-right">
-                                                <span className="text-lg font-bold text-primary">${space.pricePerHour || space.price}</span>
+                                                <span className="text-lg font-bold text-primary">₹{space.pricePerHour || space.price}</span>
                                                 <span className="text-xs text-muted-foreground block">/hr</span>
                                             </div>
                                         </div>
